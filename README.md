@@ -42,7 +42,7 @@ Raw CSV (307,645 rows)
          ▼
 ┌───────────────────┐
 │    EDA (Silver)   │  Exploratory Data Analysis · Distributions · Trends
-│  🔄 In Progress   │
+│    ✅ Complete    │  5 analyses · Key findings documented
 └────────┬──────────┘
          │
          ▼
@@ -74,7 +74,7 @@ warehouse-retail-sales-ml/
 ├── notebooks/
 │   ├── 01_bronze_ingestion.ipynb       ✅ Raw data ingestion
 │   ├── 02_silver_transformation.ipynb  ✅ Cleaning & enrichment
-│   ├── 03_silver_EDA.ipynb             🔄 Exploratory analysis
+│   ├── 03_silver_EDA.ipynb             ✅ Exploratory analysis
 │   ├── 04_gold_metrics.ipynb           ⏳ Business aggregations
 │   ├── 05_ml_pipeline.ipynb            ⏳ ML modeling
 │   └── 06_dashboard.ipynb              ⏳ Visualizations
@@ -135,13 +135,18 @@ warehouse-retail-sales-ml/
 
 ---
 
-## Key Findings (so far)
+## Key Findings
 
-- Dataset contains **5 item types** — WINE dominates with 187,640 records (61%)
-- **167 rows** had null SUPPLIER and ITEM CODE simultaneously — filled with `"UNKNOWN"`
-- Date range confirmed: **June 2017 → September 2020**
-- Dataset is actively maintained — last updated May 5, 2026
-- All null values resolved in Silver — 0 nulls across all 11 columns
+- **BEER dominates by volume** — 7.6M units · avg 180.8 units per transaction
+- **WINE dominates by frequency** — 187,640 transactions · avg 14 units each
+- **Top 3 suppliers control 40.6% of total market volume** — Crown Imports, Miller Brewing, Anheuser Busch
+- **Corona Extra** is the single best-selling product — 352,574 units
+- **All top 20 products are BEER** — no other category appears in the top 20
+- **BEER is 85% warehouse channel** (B2B) · **LIQUOR is 47% retail** (consumer)
+- **LIQUOR has 47% inter-store transfer rate** — highest inventory rebalancing of any category
+- Dataset covers **24 months across 2017–2020** — not continuous, significant gaps in 2018 and 2020
+- **2019 is the most reliable year** — 11 consecutive months of complete data
+- All null values resolved in Silver — **0 nulls across all 11 columns**
 
 ---
 
@@ -149,7 +154,9 @@ warehouse-retail-sales-ml/
 
 **Santiago López Blanco**  
 Data Science Engineering Student — Universidad Fidélitas, Costa Rica  
+Certifications: Databricks Fundamentals · Databricks Python for Data Science & Engineering · Scrum Foundation (SFPC) · Business Intelligence Foundation (BIFPC) · Business Agility (BAPC)
 
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Santiago%20López%20Blanco-blue?logo=linkedin)](https://www.linkedin.com/in/santiago-lópez-blanco-420886342)
 [![GitHub](https://img.shields.io/badge/GitHub-SantiLopBla-black?logo=github)](https://github.com/SantiLopBla)
 
 ---
