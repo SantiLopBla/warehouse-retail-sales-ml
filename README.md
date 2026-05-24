@@ -153,10 +153,9 @@ warehouse-retail-sales-ml/
 ## Author
 
 **Santiago López Blanco**  
-Data Science Engineering Student — Universidad Fidélitas, Costa Rica  
-Certifications: Databricks Fundamentals · Databricks Python for Data Science & Engineering · Scrum Foundation (SFPC) · Business Intelligence Foundation (BIFPC) · Business Agility (BAPC)
+Data Science Engineering Student — Universidad Fidélitas, Costa Rica
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Santiago%20López%20Blanco-blue?logo=linkedin)](https://www.linkedin.com/in/santiago-lópez-blanco-420886342)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/santiago-lópez-blanco-420886342)
 [![GitHub](https://img.shields.io/badge/GitHub-SantiLopBla-black?logo=github)](https://github.com/SantiLopBla)
 
 ---
