@@ -18,7 +18,7 @@ dataset of warehouse and retail sales transactions from Montgomery County, Maryl
 **Publisher:** data.montgomerycountymd.gov  
 **Issued:** July 6, 2017 · **Last modified:** May 5, 2026  
 **Period covered:** June 2017 — September 2020  
-**Categories:** WINE · BEER · LIQUOR · KEGS · NON-ALCOHOL
+**Categories:** WINE · BEER · LIQUOR · KEGS · NON-ALCOHOL · STR_SUPPLIES
 
 ---
 
@@ -48,7 +48,7 @@ Raw CSV (307,645 rows)
          ▼
 ┌───────────────────┐
 │       GOLD        │  Business metrics · KPIs · ML-ready feature table
-│    ⏳ Pending     │
+│    ✅ Complete    │  2 tables · 9,980 + 294 rows
 └────────┬──────────┘
          │
          ▼
@@ -75,8 +75,8 @@ warehouse-retail-sales-ml/
 │   ├── 01_bronze_ingestion.ipynb       ✅ Raw data ingestion
 │   ├── 02_silver_transformation.ipynb  ✅ Cleaning & enrichment
 │   ├── 03_silver_EDA.ipynb             ✅ Exploratory analysis
-│   ├── 04_gold_metrics.ipynb           ⏳ Business aggregations
-│   ├── 05_ml_pipeline.ipynb            ⏳ ML modeling
+│   ├── 04_gold_layer.ipynb             ✅ Business metrics & ML features
+│   ├── 05_ml_model.ipynb               ⏳ ML modeling
 │   └── 06_dashboard.ipynb              ⏳ Visualizations
 │
 ├── src/
@@ -116,7 +116,7 @@ warehouse-retail-sales-ml/
 | supplier | string | Distributor name (uppercase) |
 | item_code | string | Product identifier |
 | item_description | string | Full product name (uppercase) |
-| item_type | string | Category: WINE, BEER, LIQUOR, KEGS, NON-ALCOHOL |
+| item_type | string | Category: WINE, BEER, LIQUOR, KEGS, NON-ALCOHOL, STR_SUPPLIES |
 | retail_sales | double | Units sold at retail |
 | retail_transfers | double | Units transferred between stores |
 | warehouse_sales | double | Units sold from warehouse |
@@ -130,22 +130,22 @@ warehouse-retail-sales-ml/
 |-------|-------|------|---------|--------|
 | `main.default.bronze_warehouse_sales` | Bronze | 307,645 | 9 | ✅ Ready |
 | `main.default.silver_warehouse_sales` | Silver | 307,645 | 11 | ✅ Ready |
-| `main.default.gold_monthly_sales` | Gold | — | — | ⏳ Pending |
-| `main.default.gold_supplier_performance` | Gold | — | — | ⏳ Pending |
+| `main.default.gold_business_metrics` | Gold | 9,980 | 12 | ✅ Ready |
+| `main.default.gold_ml_features` | Gold | 294 | 13 | ✅ Ready |
 
 ---
 
 ## Key Findings
 
-- **BEER dominates by volume** — 7.6M units · avg 180.8 units per transaction
-- **WINE dominates by frequency** — 187,640 transactions · avg 14 units each
-- **Top 3 suppliers control 40.6% of total market volume** — Crown Imports, Miller Brewing, Anheuser Busch
-- **Corona Extra** is the single best-selling product — 352,574 units
+- **BEER dominates by volume** — 7.67M units · 62.8% of total market · avg 180.8 units per transaction
+- **WINE dominates by frequency** — 187,640 transactions · avg 14.06 units each
+- **Top 3 suppliers control 41.2% of total market volume** — Crown Imports (14.9%), Anheuser Busch, Miller Brewing
+- **395 distinct suppliers** — extreme concentration in top 3 out of 395
+- **Corona Extra** is the single best-selling product — 352,574 units · present all 24 months
 - **All top 20 products are BEER** — no other category appears in the top 20
-- **BEER is 85% warehouse channel** (B2B) · **LIQUOR is 47% retail** (consumer)
-- **LIQUOR has 47% inter-store transfer rate** — highest inventory rebalancing of any category
-- Dataset covers **24 months across 2017–2020** — not continuous, significant gaps in 2018 and 2020
-- **2019 is the most reliable year** — 11 consecutive months of complete data
+- **BEER is 85% warehouse channel** (B2B bulk) · **LIQUOR is 94% store-facing** (retail + transfers)
+- **2019 is the only reliable year** — 11 consecutive months · 5.53M units
+- **2018 has only 2 months** of data · **2020 has 4 non-consecutive months**
 - All null values resolved in Silver — **0 nulls across all 11 columns**
 
 ---
@@ -156,7 +156,6 @@ warehouse-retail-sales-ml/
 Data Science Engineering Student — Universidad Fidélitas, Costa Rica
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/santiago-lópez-blanco-420886342)
-
 
 ---
 
