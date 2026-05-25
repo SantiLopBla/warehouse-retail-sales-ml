@@ -48,13 +48,13 @@ Raw CSV (307,645 rows)
          ▼
 ┌───────────────────┐
 │       GOLD        │  Business metrics · KPIs · ML-ready feature table
-│    ✅ Complete    │  2 tables · 9,980 + 294 rows
+│    ✅ Complete    │  2 tables · 9,980 + 8,219 rows
 └────────┬──────────┘
          │
          ▼
 ┌───────────────────┐
-│    ML PIPELINE    │  Regression models · Experiment tracking
-│    ⏳ Pending     │
+│    ML PIPELINE    │  Demand forecasting · 4 models · TimeSeriesSplit CV
+│    ⏳ In Progress │
 └────────┬──────────┘
          │
          ▼
@@ -103,6 +103,9 @@ warehouse-retail-sales-ml/
 | Delta Lake | Reliable storage layer (ACID transactions + time travel) |
 | Databricks Serverless | Compute — no cluster management required |
 | Python 3.12 | Core language |
+| scikit-learn | ML models and TimeSeriesSplit cross-validation |
+| LightGBM | Gradient boosting — fast and memory-efficient |
+| XGBoost | Optimized gradient boosting |
 
 ---
 
@@ -131,7 +134,22 @@ warehouse-retail-sales-ml/
 | `main.default.bronze_warehouse_sales` | Bronze | 307,645 | 9 | ✅ Ready |
 | `main.default.silver_warehouse_sales` | Silver | 307,645 | 11 | ✅ Ready |
 | `main.default.gold_business_metrics` | Gold | 9,980 | 12 | ✅ Ready |
-| `main.default.gold_ml_features` | Gold | 294 | 13 | ✅ Ready |
+| `main.default.gold_ml_features` | Gold | 8,219 | 14 | ✅ Ready |
+
+---
+
+## ML Pipeline
+
+| Model | Type | CV Strategy |
+|-------|------|-------------|
+| Linear Regression | Baseline | TimeSeriesSplit (5 folds) |
+| Random Forest | Bagging | TimeSeriesSplit (5 folds) |
+| LightGBM | Gradient Boosting | TimeSeriesSplit (5 folds) |
+| XGBoost | Optimized Boosting | TimeSeriesSplit (5 folds) |
+
+**Split:** Train+CV = 2017–2019 (7,101 rows) · Test = 2020 (1,118 rows)  
+**Metrics:** MAE · RMSE · R²  
+**Note:** 2020 test set coincides with COVID-19 — metrics reflect real-world anomaly conditions
 
 ---
 
