@@ -173,7 +173,7 @@ warehouse-retail-sales-ml/
 **Santiago López Blanco**  
 Data Science Engineering Student — Universidad Fidélitas, Costa Rica
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/santiago-lópez-blanco-420886342)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/santiago-l%C3%B3pez-blanco-ds)
 
 ---
 
