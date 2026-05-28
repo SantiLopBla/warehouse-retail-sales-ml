@@ -4,6 +4,7 @@
 ![Databricks](https://img.shields.io/badge/Databricks-Free%20Edition-red?logo=databricks)
 ![Apache Spark](https://img.shields.io/badge/Apache%20Spark-4.1-orange?logo=apachespark)
 ![Delta Lake](https://img.shields.io/badge/Delta%20Lake-enabled-blue)
+![MLflow](https://img.shields.io/badge/MLflow-Tracking-blue?logo=mlflow)
 ![Status](https://img.shields.io/badge/Status-In%20Progress-yellow)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
@@ -54,7 +55,7 @@ Raw CSV (307,645 rows)
          ▼
 ┌───────────────────┐
 │    ML PIPELINE    │  Demand forecasting · 4 models · TimeSeriesSplit CV
-│    ⏳ In Progress │
+│    ✅ Complete    │  Best model: LightGBM · R² 96.84% · MAE $276.81
 └────────┬──────────┘
          │
          ▼
@@ -76,17 +77,8 @@ warehouse-retail-sales-ml/
 │   ├── 02_silver_transformation.ipynb  ✅ Cleaning & enrichment
 │   ├── 03_silver_EDA.ipynb             ✅ Exploratory analysis
 │   ├── 04_gold_layer.ipynb             ✅ Business metrics & ML features
-│   ├── 05_ml_model.ipynb               ⏳ ML modeling
+│   ├── 05_ml_model.ipynb               ✅ ML modeling
 │   └── 06_dashboard.ipynb              ⏳ Visualizations
-│
-├── src/
-│   ├── bronze.py                       ⏳ Reusable ingestion functions
-│   ├── silver.py                       ⏳ Reusable transformation functions
-│   ├── gold.py                         ⏳ Reusable aggregation functions
-│   └── ml_pipeline.py                  ⏳ Reusable ML functions
-│
-├── docs/
-│   └── architecture.md                 ⏳ Detailed architecture notes
 │
 ├── .gitignore
 ├── LICENSE
@@ -101,10 +93,11 @@ warehouse-retail-sales-ml/
 |------|---------|
 | Apache Spark 4.1 | Distributed data processing |
 | Delta Lake | Reliable storage layer (ACID transactions + time travel) |
-| Databricks Serverless | Compute — no cluster management required |
+| Databricks Free Edition | Compute — no cluster management required |
+| MLflow | Experiment tracking and model registry |
 | Python 3.12 | Core language |
 | scikit-learn | ML models and TimeSeriesSplit cross-validation |
-| LightGBM | Gradient boosting — fast and memory-efficient |
+| LightGBM | Gradient boosting — best model |
 | XGBoost | Optimized gradient boosting |
 
 ---
@@ -140,31 +133,86 @@ warehouse-retail-sales-ml/
 
 ## ML Pipeline
 
-| Model | Type | CV Strategy |
-|-------|------|-------------|
-| Linear Regression | Baseline | TimeSeriesSplit (5 folds) |
-| Random Forest | Bagging | TimeSeriesSplit (5 folds) |
-| LightGBM | Gradient Boosting | TimeSeriesSplit (5 folds) |
-| XGBoost | Optimized Boosting | TimeSeriesSplit (5 folds) |
+### Objective
 
-**Split:** Train+CV = 2017–2019 (7,101 rows) · Test = 2020 (1,118 rows)  
-**Metrics:** MAE · RMSE · R²  
-**Note:** 2020 test set coincides with COVID-19 — metrics reflect real-world anomaly conditions
+Predict `next_month_sales` for each `item_type + supplier` combination using lag features, rolling averages, and seasonality encoding.
+
+### Train / Test Split
+
+| Set | Years | Rows |
+|-----|-------|------|
+| Train + CV | 2017, 2018, 2019 | 7,101 |
+| Test | 2020 | 1,118 |
+
+Cross-validation uses `TimeSeriesSplit` with 5 folds — validation always uses future data relative to training. The 2020 test set coincides with the COVID-19 pandemic, producing honest metrics under real-world anomaly conditions.
+
+### Model Results
+
+| Model | CV MAE | CV MAE ± | Test MAE | Test RMSE | Test R² |
+|-------|--------|----------|----------|-----------|---------|
+| **LightGBM** | $255.03 | ±$254.55 | **$276.81** | **$1,312.87** | **96.84%** |
+| Random Forest | $118.18 | ±$57.73 | $284.64 | $1,531.97 | 95.70% |
+| XGBoost | $116.80 | ±$61.10 | $305.23 | $1,820.86 | 93.93% |
+| Linear Regression | $346.56 | ±$245.58 | $359.67 | $2,038.51 | 92.39% |
+
+**Best model: LightGBM** — wins on Test MAE, Test RMSE, and R². XGBoost achieved the lowest CV MAE but its test performance reveals mild overfitting to the training distribution.
+
+### Feature Importance (LightGBM)
+
+| Feature | Importance |
+|---------|------------|
+| lag_2_sales | 41.91% |
+| lag_1_sales | 30.47% |
+| supplier_tier_enc | 13.76% |
+| rolling_3m_avg | 11.34% |
+| All others combined | 2.52% |
+
+Recent sales history accounts for 71% of all model decisions. The strongest predictor of next month's sales is what was sold in the last two months.
+
+### Performance by Segment
+
+**By product type:**
+
+| Segment | Test MAE | Test R² | Notes |
+|---------|----------|---------|-------|
+| STR_SUPPLIES | $49.69 | 69.54% | Low volume, stable |
+| KEGS | $50.67 | -4.18% | Model worse than average — event-driven demand |
+| NON-ALCOHOL | $130.45 | 49.68% | Insufficient features for this segment |
+| WINE | $145.36 | 90.77% | Reliable |
+| LIQUOR | $172.84 | 95.42% | Reliable |
+| BEER | $907.23 | 96.88% | High MAE driven by COVID shock in March 2020 |
+
+**By supplier tier:**
+
+| Tier | Test MAE | Test R² | Notes |
+|------|----------|---------|-------|
+| rest | $112.22 | 89.47% | Low and stable volumes |
+| top15 | $1,480.80 | 87.51% | Hardest segment to forecast |
+| top3 | $3,160.43 | 97.27% | Large MAE in dollars but strong pattern capture |
+
+### Model Registry
+
+The trained LightGBM model is registered in the MLflow Model Registry under `workspace.default.lightgbm_sales_forecaster`. Encoders are saved as MLflow artifacts alongside the model for reproducible inference.
 
 ---
 
 ## Key Findings
 
+### EDA
 - **BEER dominates by volume** — 7.67M units · 62.8% of total market · avg 180.8 units per transaction
 - **WINE dominates by frequency** — 187,640 transactions · avg 14.06 units each
 - **Top 3 suppliers control 41.2% of total market volume** — Crown Imports (14.9%), Anheuser Busch, Miller Brewing
-- **395 distinct suppliers** — extreme concentration in top 3 out of 395
+- **395 distinct suppliers** — extreme concentration in top 3
 - **Corona Extra** is the single best-selling product — 352,574 units · present all 24 months
 - **All top 20 products are BEER** — no other category appears in the top 20
 - **BEER is 85% warehouse channel** (B2B bulk) · **LIQUOR is 94% store-facing** (retail + transfers)
-- **2019 is the only reliable year** — 11 consecutive months · 5.53M units
-- **2018 has only 2 months** of data · **2020 has 4 non-consecutive months**
-- All null values resolved in Silver — **0 nulls across all 11 columns**
+
+### ML Pipeline
+- **LightGBM generalizes best** — wins on all test metrics despite weaker cross-validation scores
+- **Lag features drive 71% of predictions** — recent sales history is the strongest signal by far
+- **KEGS is the hardest segment** — negative R² indicates the current feature set is insufficient
+- **March 2020 is the largest error month** — COVID-19 demand shock caused a -12.79% underestimation that no model trained on pre-pandemic data could anticipate
+- **top15 suppliers are the hardest tier to forecast** — moderate volume combined with high variability produces the weakest R² across tiers
 
 ---
 
@@ -176,10 +224,5 @@ Data Science Engineering Student — Universidad Fidélitas, Costa Rica
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://www.linkedin.com/in/santiago-l%C3%B3pez-blanco-ds)
 
 ---
-
-## Status
-
-This project is actively under development. New notebooks and results
-will be added as each phase is completed.
 
 > Last updated: May 2026
