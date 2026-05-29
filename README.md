@@ -55,7 +55,7 @@ Raw CSV (307,645 rows)
          ▼
 ┌───────────────────┐
 │    ML PIPELINE    │  Demand forecasting · 4 models · TimeSeriesSplit CV
-│    ✅ Complete    │  Best model: LightGBM · R² 96.84% · MAE $276.81
+│    ✅ Complete    │  Best model: LightGBM · R² 96.81% · MAE $279.45
 └────────┬──────────┘
          │
          ▼
@@ -150,10 +150,10 @@ Cross-validation uses `TimeSeriesSplit` with 5 folds — validation always uses 
 
 | Model | CV MAE | CV MAE ± | Test MAE | Test RMSE | Test R² |
 |-------|--------|----------|----------|-----------|---------|
-| **LightGBM** | $255.03 | ±$254.55 | **$276.81** | **$1,312.87** | **96.84%** |
-| Random Forest | $118.18 | ±$57.73 | $284.64 | $1,531.97 | 95.70% |
-| XGBoost | $116.80 | ±$61.10 | $305.23 | $1,820.86 | 93.93% |
-| Linear Regression | $346.56 | ±$245.58 | $359.67 | $2,038.51 | 92.39% |
+| **LightGBM** | $254.78 | ±$254.50 | **$279.45** | **$1,320.42** | **96.81%** |
+| Random Forest | $117.80 | ±$57.04 | $284.87 | $1,531.15 | 95.71% |
+| XGBoost | $113.87 | ±$57.63 | $306.00 | $1,815.49 | 93.96% |
+| Linear Regression | $333.14 | ±$247.23 | $361.91 | $2,037.20 | 92.40% |
 
 **Best model: LightGBM** — wins on Test MAE, Test RMSE, and R². XGBoost achieved the lowest CV MAE but its test performance reveals mild overfitting to the training distribution.
 
@@ -161,13 +161,13 @@ Cross-validation uses `TimeSeriesSplit` with 5 folds — validation always uses 
 
 | Feature | Importance |
 |---------|------------|
-| lag_2_sales | 41.91% |
-| lag_1_sales | 30.47% |
-| supplier_tier_enc | 13.76% |
-| rolling_3m_avg | 11.34% |
-| All others combined | 2.52% |
+| lag_2_sales | 34.57% |
+| lag_1_sales | 32.44% |
+| supplier_tier_enc | 15.61% |
+| rolling_3m_avg | 14.63% |
+| All others combined | 2.75% |
 
-Recent sales history accounts for 71% of all model decisions. The strongest predictor of next month's sales is what was sold in the last two months.
+Recent sales history accounts for ~67% of all model decisions. The strongest predictor of next month's sales is what was sold in the last two months.
 
 ### Performance by Segment
 
@@ -175,24 +175,24 @@ Recent sales history accounts for 71% of all model decisions. The strongest pred
 
 | Segment | Test MAE | Test R² | Notes |
 |---------|----------|---------|-------|
-| STR_SUPPLIES | $49.69 | 69.54% | Low volume, stable |
-| KEGS | $50.67 | -4.18% | Model worse than average — event-driven demand |
-| NON-ALCOHOL | $130.45 | 49.68% | Insufficient features for this segment |
-| WINE | $145.36 | 90.77% | Reliable |
-| LIQUOR | $172.84 | 95.42% | Reliable |
-| BEER | $907.23 | 96.88% | High MAE driven by COVID shock in March 2020 |
+| STR_SUPPLIES | $52.93 | 68.22% | Low volume, stable |
+| KEGS | $51.16 | -2.57% | Model worse than average — event-driven demand |
+| NON-ALCOHOL | $132.31 | 50.27% | Insufficient features for this segment |
+| WINE | $148.51 | 89.87% | Reliable |
+| LIQUOR | $176.12 | 95.25% | Reliable |
+| BEER | $909.29 | 96.87% | High MAE driven by COVID shock in March 2020 |
 
 **By supplier tier:**
 
 | Tier | Test MAE | Test R² | Notes |
 |------|----------|---------|-------|
-| rest | $112.22 | 89.47% | Low and stable volumes |
-| top15 | $1,480.80 | 87.51% | Hardest segment to forecast |
-| top3 | $3,160.43 | 97.27% | Large MAE in dollars but strong pattern capture |
+| rest | $111.75 | 89.38% | Low and stable volumes |
+| top15 | $1,523.80 | 87.00% | Hardest segment to forecast |
+| top3 | $3,158.06 | 97.32% | Large MAE in dollars but strong pattern capture |
 
 ### Model Registry
 
-The trained LightGBM model is registered in the MLflow Model Registry under `workspace.default.lightgbm_sales_forecaster`. Encoders are saved as MLflow artifacts alongside the model for reproducible inference.
+The trained LightGBM model is registered in the MLflow Model Registry under `workspace.default.lightgbm_sales_forecaster`. Encoding artifacts (`dummy_cols` and `tier_order`) are saved as MLflow artifacts alongside the model for reproducible inference.
 
 ---
 
@@ -209,9 +209,9 @@ The trained LightGBM model is registered in the MLflow Model Registry under `wor
 
 ### ML Pipeline
 - **LightGBM generalizes best** — wins on all test metrics despite weaker cross-validation scores
-- **Lag features drive 71% of predictions** — recent sales history is the strongest signal by far
+- **Lag features drive ~67% of predictions** — recent sales history is the strongest signal by far
 - **KEGS is the hardest segment** — negative R² indicates the current feature set is insufficient
-- **March 2020 is the largest error month** — COVID-19 demand shock caused a -12.79% underestimation that no model trained on pre-pandemic data could anticipate
+- **March 2020 is the largest error month** — COVID-19 demand shock caused a -12.95% underestimation that no model trained on pre-pandemic data could anticipate
 - **top15 suppliers are the hardest tier to forecast** — moderate volume combined with high variability produces the weakest R² across tiers
 
 ---
