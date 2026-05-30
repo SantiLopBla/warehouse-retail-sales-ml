@@ -73,6 +73,7 @@ Raw CSV (307,645 rows)
 warehouse-retail-sales-ml/
 │
 ├── notebooks/
+│   ├── 00_setup.ipynb                  ✅ Environment setup & reproducibility guide
 │   ├── 01_bronze_ingestion.ipynb       ✅ Raw data ingestion
 │   ├── 02_silver_transformation.ipynb  ✅ Cleaning & enrichment
 │   ├── 03_silver_EDA.ipynb             ✅ Exploratory analysis
@@ -81,6 +82,7 @@ warehouse-retail-sales-ml/
 │   └── 06_dashboard.ipynb              ✅ Visualizations
 │
 ├── assets/                             📊 Charts and visualizations
+├── requirements.txt                    📦 Python dependencies with pinned versions
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -165,7 +167,24 @@ Cross-validation uses `TimeSeriesSplit` with 5 folds — validation always uses 
 | XGBoost | $113.87 | ±$57.63 | $306.00 | $1,815.49 | 93.96% |
 | Linear Regression | $333.14 | ±$247.23 | $361.91 | $2,037.20 | 92.40% |
 
-**Best model: LightGBM** — wins on Test MAE, Test RMSE, and R². XGBoost achieved the lowest CV MAE but its test performance reveals mild overfitting to the training distribution.
+**Best model: LightGBM** — wins on Test MAE ($279.45), Test RMSE ($1,320.42), and R² (96.81%).
+
+**Why not XGBoost despite its lower CV MAE?**
+
+XGBoost produced the best cross-validation score ($113.87 CV MAE) but degraded by $192 when evaluated on unseen 2020 data ($306.00 Test MAE). This gap reveals that XGBoost's CV score was misleadingly optimistic — the model captured patterns specific to the 2017–2019 training folds that did not hold in 2020.
+
+LightGBM's CV MAE of $254.78 looked worse during validation, but it degraded by only $24 on the test set ($279.45 Test MAE). This small gap is the signal that matters: **LightGBM's CV was honest about what the model would do in production**.
+
+The key diagnostic is not CV MAE alone, but the spread between CV MAE and Test MAE:
+
+| Model | CV MAE | Test MAE | Degradation | Verdict |
+|-------|--------|----------|-------------|---------|
+| LightGBM | $254.78 ± $254.50 | **$279.45** | **+$24** | ✅ Most honest |
+| Random Forest | $117.80 ± $57.04 | $284.87 | +$167 | Moderate gap |
+| XGBoost | $113.87 ± $57.63 | $306.00 | +$192 | Largest gap |
+| Linear Regression | $333.14 ± $247.23 | $361.91 | +$29 | Honest but weak |
+
+Note: LightGBM's high CV variance (± $254.50) reflects the heterogeneity of the time series folds — some folds are inherently harder than others — not model instability.
 
 ![Model Comparison — CV MAE](assets/cv_mae.png)
 ![Model Comparison — Test R²](assets/test_r2.png)

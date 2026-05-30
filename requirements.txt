@@ -1,0 +1,23 @@
+# ============================================================
+# warehouse-retail-sales-ml — Python dependencies
+# Python 3.12 | Databricks Free Edition | Apache Spark 4.1
+# ============================================================
+
+# --- Core data stack ---
+pandas==2.2.2
+numpy==1.26.4
+
+# --- Machine learning ---
+scikit-learn==1.5.1
+lightgbm==4.3.0
+xgboost==2.0.3
+
+# --- Experiment tracking ---
+mlflow==2.14.1
+
+# --- Visualization ---
+matplotlib==3.9.1
+
+# --- Spark / Delta (Databricks manages these — listed for reference only)
+# pyspark==4.0.0       # Managed by Databricks runtime — do NOT pip install
+# delta-spark==3.2.0   # Managed by Databricks runtime — do NOT pip install
