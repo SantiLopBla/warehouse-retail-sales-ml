@@ -5,7 +5,7 @@
 ![Apache Spark](https://img.shields.io/badge/Apache%20Spark-4.1-orange?logo=apachespark)
 ![Delta Lake](https://img.shields.io/badge/Delta%20Lake-enabled-blue)
 ![MLflow](https://img.shields.io/badge/MLflow-Tracking-blue?logo=mlflow)
-![Status](https://img.shields.io/badge/Status-In%20Progress-yellow)
+![Status](https://img.shields.io/badge/Status-Complete-green)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## Overview
@@ -60,8 +60,8 @@ Raw CSV (307,645 rows)
          │
          ▼
 ┌───────────────────┐
-│    DASHBOARD      │  Business visualizations
-│    ⏳ Pending     │
+│    DASHBOARD      │  Business visualizations + 2025 demand forecast
+│    ✅ Complete    │  4 sections · Spark SQL optimized · MLflow integration
 └───────────────────┘
 ```
 
@@ -78,8 +78,9 @@ warehouse-retail-sales-ml/
 │   ├── 03_silver_EDA.ipynb             ✅ Exploratory analysis
 │   ├── 04_gold_layer.ipynb             ✅ Business metrics & ML features
 │   ├── 05_ml_model.ipynb               ✅ ML modeling
-│   └── 06_dashboard.ipynb              ⏳ Visualizations
+│   └── 06_dashboard.ipynb              ✅ Visualizations
 │
+├── assets/                             📊 Charts and visualizations
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -128,6 +129,8 @@ warehouse-retail-sales-ml/
 | `main.default.silver_warehouse_sales` | Silver | 307,645 | 11 | ✅ Ready |
 | `main.default.gold_business_metrics` | Gold | 9,980 | 12 | ✅ Ready |
 | `main.default.gold_ml_features` | Gold | 8,219 | 14 | ✅ Ready |
+| `main.default.gold_model_performance_by_type` | Gold | 6 | 5 | ✅ Ready |
+| `main.default.gold_model_performance_by_tier` | Gold | 3 | 5 | ✅ Ready |
 
 ---
 
@@ -136,6 +139,13 @@ warehouse-retail-sales-ml/
 ### Objective
 
 Predict `next_month_sales` for each `item_type + supplier` combination using lag features, rolling averages, and seasonality encoding.
+
+### Feature Engineering
+
+Categorical columns are encoded based on whether they have a natural order:
+
+- `item_type` — no order between categories. Encoded with **One-Hot Encoding** (`pd.get_dummies`, `drop_first=True`). Result: 5 binary columns with prefix `type_`.
+- `supplier_tier` — has a real business order: top3 > top15 > rest. Encoded with a **manual ordinal mapping**: top3=2, top15=1, rest=0.
 
 ### Train / Test Split
 
@@ -157,17 +167,16 @@ Cross-validation uses `TimeSeriesSplit` with 5 folds — validation always uses 
 
 **Best model: LightGBM** — wins on Test MAE, Test RMSE, and R². XGBoost achieved the lowest CV MAE but its test performance reveals mild overfitting to the training distribution.
 
-### Feature Importance (LightGBM)
+![Model Comparison — CV MAE](assets/cv_mae.png)
+![Model Comparison — Test R²](assets/test_r2.png)
 
-| Feature | Importance |
-|---------|------------|
-| lag_2_sales | 34.57% |
-| lag_1_sales | 32.44% |
-| supplier_tier_enc | 15.61% |
-| rolling_3m_avg | 14.63% |
-| All others combined | 2.75% |
+### Predictions vs Actual (Test set 2020)
 
-Recent sales history accounts for ~67% of all model decisions. The strongest predictor of next month's sales is what was sold in the last two months.
+![Predictions vs Actual](assets/prediction_vs_actual.png)
+
+### Model Comparison — CV MAE vs Test MAE
+
+![CV MAE vs Test MAE](assets/cv_mae-test_mae.png)
 
 ### Performance by Segment
 
@@ -192,7 +201,28 @@ Recent sales history accounts for ~67% of all model decisions. The strongest pre
 
 ### Model Registry
 
-The trained LightGBM model is registered in the MLflow Model Registry under `workspace.default.lightgbm_sales_forecaster`. Encoding artifacts (`dummy_cols` and `tier_order`) are saved as MLflow artifacts alongside the model for reproducible inference.
+The trained LightGBM model is registered in the MLflow Model Registry under `workspace.default.lightgbm_sales_forecaster`. Encoding artifacts (`dummy_cols` and `tier_order`) are saved as MLflow artifacts alongside the model for reproducible inference. Segment performance results are persisted as Delta Tables for downstream consumption by the dashboard.
+
+---
+
+## Dashboard
+
+Business visualizations built in `06_dashboard.ipynb` answering four business questions.
+
+### Sales Overview
+
+![Sales Overview](assets/sales_overview.png)
+
+BEER dominates with 7.67M units — 62.8% of total market. Crown Imports, Anheuser Busch, and Miller Brewing control the majority of warehouse sales. From position 4 onwards volume drops sharply.
+
+### 2025 Demand Forecast
+
+![2025 Demand Forecast](assets/demand_forecast_2025.png)
+
+The model projects a summer peak for all top suppliers in April–June 2025, consistent with historical seasonality. Crown Imports leads volume throughout the year peaking at ~82K units in June.
+
+### Dashboard optimization
+Aggregations run in Spark before transferring to pandas — 98.4% reduction in data transfer (165 rows transferred vs. ~10K full load). Model and encoders loaded dynamically from MLflow registry with no hardcoded version numbers.
 
 ---
 
@@ -213,6 +243,11 @@ The trained LightGBM model is registered in the MLflow Model Registry under `wor
 - **KEGS is the hardest segment** — negative R² indicates the current feature set is insufficient
 - **March 2020 is the largest error month** — COVID-19 demand shock caused a -12.95% underestimation that no model trained on pre-pandemic data could anticipate
 - **top15 suppliers are the hardest tier to forecast** — moderate volume combined with high variability produces the weakest R² across tiers
+
+### Dashboard
+- **Summer seasonality is market-wide** — all top 3 suppliers peak in April–June every year
+- **2025 forecast projects same seasonal pattern** — Q1 stockpiling recommended for BEER
+- **98.4% data transfer reduction** via Spark SQL aggregations before pandas load
 
 ---
 
