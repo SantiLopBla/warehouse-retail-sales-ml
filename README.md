@@ -186,16 +186,12 @@ The key diagnostic is not CV MAE alone, but the spread between CV MAE and Test M
 
 Note: LightGBM's high CV variance (± $254.50) reflects the heterogeneity of the time series folds — some folds are inherently harder than others — not model instability.
 
-![Model Comparison — CV MAE](assets/cv_mae.png)
-![Model Comparison — Test R²](assets/test_r2.png)
+![MLflow Experiment Tracking — all runs](assets/ml_experiments_read_me.png)
 
 ### Predictions vs Actual (Test set 2020)
 
 ![Predictions vs Actual](assets/prediction_vs_actual.png)
 
-### Model Comparison — CV MAE vs Test MAE
-
-![CV MAE vs Test MAE](assets/cv_mae_vs_test_mae.png)
 
 ### Performance by Segment
 
