@@ -176,7 +176,7 @@ Cross-validation uses `TimeSeriesSplit` with 5 folds — validation always uses 
 
 ### Model Comparison — CV MAE vs Test MAE
 
-![CV MAE vs Test MAE](assets/cv_mae-test_mae.png)
+![CV MAE vs Test MAE](assets/cv_mae_vs_test_mae.png)
 
 ### Performance by Segment
 
